@@ -1,0 +1,65 @@
+Neste capítulo aprendemos a lidar com a Coesão:
+
+
+- Devemos utilizar o projeto que o professor disponibilizou. Neste projeto temos a classe Cargo, Funcionario, ValidacaoException.
+
+
+- Devemos analisar a classe Funcionario. Veremos que nessa classe tem o método reajustarSalario() e dentro desse método há uma
+regra de negócio para ver se o aumento do salário é permitido, a regra de negócio exige que o reajuste seja no máximo 40%. Veja o
+código desse método:
+
+	public void reajustarSalario(BigDecimal aumento) {
+		BigDecimal percentualReajuste = aumento.divide(salario, RoundingMode.HALF_UP);
+		if (percentualReajuste.compareTo(new BigDecimal("0.4")) > 0) {
+			throw new ValidacaoException("Reajuste nao pode ser superior a 40% do salario!");
+		}
+		this.salario = this.salario.add(aumento);
+		this.dataUltimoReajuste = LocalDate.now();
+	}
+	
+Tenha em mente que reajustarSalario() tem uma regra de negócio e essa regra não tem muito a ver com Funcionario, o salário tem 
+ligação com funcionáriom, mas a maneira que vamos calcular o reajuste não, ou seja, nossa classe não está muito Coesa! 
+
+
+- Para melhorar a coesão dessa classe podemos criar esse método em outra classe. Vamos criar a classe ReajusteService e nela criar
+o metodo reajustarSalarioDoFuncionario. Veja como ficou essa classe e seu método:
+
+	public class ReajusteService {
+		
+		public void reajustarSalarioDoFuncionario(Funcionario funcionario, BigDecimal aumento) {
+			
+			BigDecimal salarioAtual = funcionario.getSalario();
+			
+			BigDecimal percentualReajuste = aumento.divide(salarioAtual, RoundingMode.HALF_UP);
+			if (percentualReajuste.compareTo(new BigDecimal("0.4")) > 0) {
+				throw new ValidacaoException("Reajuste nao pode ser superior a 40% do salario!");
+			}
+			
+			BigDecimal salarioReajustado = salarioAtual.add(aumento);
+			funcionario.atualizarSalario(salarioReajustado);
+		}
+
+	}
+
+Veja que essa classe verifica se é possivel dar o aumento (valida se reajuste é até 40%), caso seja possível ela vai chamar o métood
+atualizaSalario() de funcionário para de fato atualizar o salario do funcionario.
+
+
+- Ao fazer essa refatoração nós melhoramos a Coesão de nossa classe. Aqui aplicamos o principio Single Responsibility Principle
+(Principio da Responsabilidade Unica). Lembre-se da comparação, nossa classe não pode ser um Canivete Suiço (tem diveras ferramentas
+juntas), pois não é porque nosso canivete tem muitas ferramentas que devemos usá-la, ou seja, embora nossa classe possa fazer tudo,
+não devemos fazer desse jeito.
+
+
+- Uncle Bob fala sobre o Single Responsibility Principle que: Uma classe deveria ter apenas um único motivo para mudar. Ou seja,
+a classe Funcionário só deve ser mudada se alguma coisa relacionada a Funcionario mude, ou seja, se a regra de reajuste salarial 
+mudar não poderiamos ter que mexer na classe Funcionario.
+
+
+- Essa refatoração gerou alguns perigos. O primeiro é que o encapsulamento piorou, pois agora é possivel chamar o método 
+atualizarSalario() diretamente, ou seja, haverá reajuste sem passar pela regra de negócio. Vamos corrigir isso depois. O método
+reajustarSalarioDoFuncionario() da classe ReajusteService pode ser melhorado, pois vai que haja diversas regras de negocio para 
+aplicar um reajuste. Também vamos melhorar isso a seguir.
+
+
+- A refatoração aplicada se chama Extrair Classe, onde o método foi jogado em outra classe.

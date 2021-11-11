@@ -1,0 +1,51 @@
+Neste capítulo aprendemos o que é o SOLID, Coesão e Acoplamento.
+
+
+- SOLID vem de:
+
+	S = Single Responsibility Principle
+	O = Open CLosed Principle
+	L = Liskov Substitution Principle
+	I = Interface SEgregation Principle
+	D = Dependency Inversion Principle
+	
+
+- SOLID são princípos que são focados em boas práticas para o paradigma Orientado a Objetos. Com esses principios vamos fazer um
+software com qualidade de com facilidade de manutenção/atualização.
+
+
+- Existem 3 pilares importantes no paradigma Orientado a Ojbetos e o SOLID estão ligados a eles:
+
+	1) Coesão: Os elementos de uma classe (Métodos e Atributos) devem estar em harmonia com a classe em si, por exemplo a classe
+	Funcionario só deve ter atributos e métodos vinculados ao Funcionario, não faz sentido colocar nessa classe atributos como
+	cep, rua, cidade ou entrão criar o método formatarCPF().
+	
+	Classes não coesas tendem a crescer indefinidamente e isso dificulta sua manutenção.
+	
+	2) Encapsulamento: Vem de colocar em capsula, ou seja, proteger algo. E muitos pensam que isso em Orientação a Objetos é 
+	apenas colocar os atributos como private e criar métodos Getters e Setters, mas Encapsulamento não é só isso.
+	Encapsulamento é proteger o atributo, mas haverá atributos que não terão o método Setter e sim um método que tenha regra de 
+	negócio, por exemplo o atributo Salário, esse atributo não deve ter o método setSalario() e sim o método deposito().
+	
+	3) Acoplamento: No nosso cenário um acoplamento ocorre quando um elemento esteja ligado com outro elemento, por exemplo, 
+	a classe X conversa com a classe Y. Não é possivel eliminar o acoplamento, mas devemos ter o mínimo possível, ou seja, uma
+	dependencia fraca. Veja exemplo:
+	
+	Baixo acoplamento:
+		
+		Funcionario funcionario = cerrgarDoBancoDeDados();
+		double totalReajuste = funcionario.getValorTotalRecebidoEmReajustes();
+		
+	Alto acoplamento:
+	
+		Funcionario funcionario = cerrgarDoBancoDeDados();
+		double totalReajuste = 0;
+		List<double> reajustes = funcionario.getReajustes();
+		//Laço for para somatar todos itens da lista reajustes
+		
+	Veja que no primeiro caso o prórpio funcionário já tem um método que retorna seu total de reajustes, já no segundo caso o
+	funcionário só tem um método que retorna a lista de todos seu reajustes e a manipualção deles será fora da classe, dessa forma
+	se um dia a classe Funcionario mudar pode acarretar erros nas classes que usam o método getReajustes().
+	
+
+- Tenha em mente que os princípios do SOLID vai nos ajudar a ter Coesão, baixo Acoplamento e a eplicar o encapsulamento.

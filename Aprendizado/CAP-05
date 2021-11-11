@@ -1,0 +1,32 @@
+Neste capítulo aprendemos que nosso código sempre que possível deve depender de uma interface e não de uma outra classe, pois uma
+interface é mais estável, dessa forma estaremos nos acomplando a algo estável! O Open Close Principle (Leta O do SOLID) já nos ajuda
+a fazer isso! Aprendemos também sobre a letra I do Solid, no caso Interface Segregation Principle
+
+
+- Para implementarmos o Open Close Principle neste projeto nós criamos uma interface de validação e fazendo dessa forma colocamos em
+prática outro pincípio do SOLID, no caso o da letra D que é Dependency Inversion Principle (Inversão de Dependencia). Esse 
+principio diz que devemos depender de uma Interface, lembre-se da metáfora da ligar uma lampada de casa, nós não ligamos o fio
+diretamente na lampada e sim usamos entre esses dois o Bocal, ou seja, uma interface! Em outras palavras as nossas implementações devem
+depender uma abstração (e não ao contrário)!
+
+
+- Quando implementamos a letra O do SOLID normalmente a gente implementa junto a S e a D juntamente, logo temos o SOD.
+
+
+- Vamos falar agora sobre a letra I de SOLID, no caso: Interface Segregation Principle (Segregação de Interface). No projeto que
+estavamos fazendo não teria como aplicá-lo, então vamos simular outro cenário em nosso projeto (esse novo cenário será feito no 
+pacote tributacao) e agora o Reajuste se tornará uma interface com método que retorna o valor e outro que retorna a data.
+Pense agora que haverá dois tipos de reajuste, a Anuenio e Promocão, ou seja, ambas as classes implementarão a interface Reajuste o
+problema que na classe Promocao se faz necessário ter mais um metodo, no um metodo que retorna o valor do imposto a pagar. Queremos
+continuiar com o uso do Polimorfismo, logo esse método de valor de imposto não pode ficar diretamente na classe, então podemos
+colocar esse metodo na interface reajuste e na implementação na classe Anuenio fazer um retnro de 0 ou null. Essa solução não é
+recomendada. O ideal é fazermos uma outra interface que terá o metodo valor de imposto e essa nova interface vai ser filha (extends) 
+a interface Reajuste, é como se fosse uma herança de interfaces, logo a classe Promocao iria implementar a interface filha (que tem
+3 metodos)! 
+
+
+- Interface Reajuste é pai da interface ReajusteTributavel
+
+- O problema apresentado nesse cenário de Segregação de Interface é semelhante ao principio de letra L, pois lá toda classe filha
+tinha que de fato usar os metodos e atributos do pai, e aqui é a mesma coisa, uma classe que vai implementar uma interface deve usar
+todos os métodos assinados na interface e nunca retornare null ou void em alguns métodos apenas para compilar!

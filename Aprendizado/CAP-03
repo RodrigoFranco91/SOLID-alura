@@ -1,0 +1,128 @@
+Neste capítulo aprendemos a lidar com o Acoplamento.
+
+
+- Agora a validação (Regra de negócio do reajuste) está isolado na classe ReajusteService no metodo reajustarSalarioDoFuncionario(). 
+Hoje temos apenas uma validação, que no caso o reajuste só pode ser até 40% do seu salário.
+
+
+- Pensa agora que nosso Gerente pediu para implementar outra Regra de Negócio, no caso o Reajuste só pode ocorrer caso seja o primeiro
+ou então o último reajuste tenha ocorrido há mais de 6 meses. Como podemos implementar isso? Podemos adicionar um outro IF no método
+reajustarSalarioDoFuncionario(). Implementando dessa forma o método ficará assim:
+
+	public void reajustarSalarioDoFuncionario(Funcionario funcionario, BigDecimal aumento) {
+		
+		BigDecimal salarioAtual = funcionario.getSalario();
+		
+		BigDecimal percentualReajuste = aumento.divide(salarioAtual, RoundingMode.HALF_UP);
+		if (percentualReajuste.compareTo(new BigDecimal("0.4")) > 0) {
+			throw new ValidacaoException("Reajuste nao pode ser superior a 40% do salario!");
+		}
+		
+		LocalDate dateUltimoReajuste = funcionario.getDataUltimoReajuste();
+		LocalDate dataAtual = LocalDate.now(); 
+		Long mesesDesdeUltimoReajuste = ChronoUnit.MONTHS.between(dateUltimoReajuste, dataAtual);
+		
+		if (mesesDesdeUltimoReajuste < 6) {
+			throw new ValidacaoException("Intervalo entre reajustes deve ser no minimo de 6 meses");
+		}
+		
+		BigDecimal salarioReajustado = salarioAtual.add(aumento);
+		funcionario.atualizarSalario(salarioReajustado);
+	}
+	
+Só que implementar dessa forma temos um problema, essa classe tende a crescer muito, pois pode surgir diversas validações (regras de 
+negócios) e isso dificultará a manutenção, pois quando alteramos uma classe podemos estragar o que estava funcionando.
+
+
+- Outro modo de implementar o item anterior é criar uma classe para cada validação, no caso criariamos a classe 
+ValidacaoPeriodicidadeReajusteService e a classe ValidacaoPercentualReajusteService. Cada classe teria o método validar(). 
+Já melhoramos, mas ainda não é a melhor solução, pois desta forma teriamos que chamar o método validar()
+de todas as classes de validações, ou seja, teriamos que criar diversos Objetos diferentes.
+
+
+- O ideal é resolver isso utilizando Interface, pois com esta usaremos o Polimorfismo! É sempre bom dependermos de Interface ao invés
+de Classe. Usaremos o que foi apresentado no item anterior e mais algumas coisas, para implementar siga o passo a passo:
+
+	1) Crie a classe ValidacaoPercentualReajuste com o método validar(). Veja:
+	
+		public class ValidacaoPercentualReajuste {
+		
+			public void validar(Funcionario funcionario, BigDecimal aumento) {
+				
+				BigDecimal salarioAtual = funcionario.getSalario();
+				
+				BigDecimal percentualReajuste = aumento.divide(salarioAtual, RoundingMode.HALF_UP);
+				if (percentualReajuste.compareTo(new BigDecimal("0.4")) > 0) {
+					throw new ValidacaoException("Reajuste nao pode ser superior a 40% do salario!");
+				}
+						
+			}
+
+		}
+		
+	2) Crie a classe ValidacaoPeriodicidadeReajuste com o método validar(). Veja:
+	
+		public class ValidacaoPeriodicidadeReajuste {
+			
+			public void validar(Funcionario funcionario, BigDecimal aumento) {
+				
+				BigDecimal salarioAtual = funcionario.getSalario();
+						
+				LocalDate dateUltimoReajuste = funcionario.getDataUltimoReajuste();
+				LocalDate dataAtual = LocalDate.now(); 
+				Long mesesDesdeUltimoReajuste = ChronoUnit.MONTHS.between(dateUltimoReajuste, dataAtual);
+				
+				if (mesesDesdeUltimoReajuste < 6) {
+					throw new ValidacaoException("Intervalo entre reajustes deve ser no minimo de 6 meses");
+				}
+				
+			}
+
+		}
+		
+	3) Crie a Interface ValidacaoReajuste com o método validar(). Veja:
+	
+		public interface ValidacaoReajuste {
+
+			public void validar(Funcionario funcionario, BigDecimal aumento);
+			
+		}
+		
+	4) Faça toda classe de Validação implementar a interface ValidacaoReajuste.
+	
+	5) A classe ReajusteService agora vai ter uma lista cujo itens será do tipo ValidacaoReajuste, isso mesmo, será do tipo da
+	interface, é aqui que aplicamos o Polimorfismo. Vamos fazer essa classe já receber esta lista através do construtor. Depois
+	para executar as validações basta cada item desta lista chamar o método validar(). Veja como ficou:
+	
+		public class ReajusteService {
+			
+			private List<ValidacaoReajuste> validacoes;
+			
+			//Quem chamar esse serviço passa as validacoes necessárias
+			public ReajusteService(List<ValidacaoReajuste> validacoes) {
+				this.validacoes = validacoes;
+			}
+
+			public void reajustarSalarioDoFuncionario(Funcionario funcionario, BigDecimal aumento) {
+				
+				this.validacoes.forEach(v -> {
+					v.validar(funcionario, aumento);
+				});
+				
+				BigDecimal salarioReajustado = funcionario.getSalario().add(aumento);
+				funcionario.atualizarSalario(salarioReajustado);
+			}
+		}
+		
+Desta forma quando surgir uma nova validação nós não vamos mais mexer na classe de serviço que faz o reajuste, no caso na classe
+ReajusteService. Se surgir uma nova validção (regra de negócio) vamos ter que criar uma nova classe que implementa a interface 
+ValidacaoReajuste e caso uma regra existe mude bastará alterar a classe que faz essa validação. Dessa forma a classe fica mais
+extensivel para novas funcionalidades.
+
+
+- O princípio aplicado nessa implementação foi o Open Closed (Aberto Fechado). Pois agora nosso projeto está aberto para novas
+funcionalidades, mas a classe que executa funcionalidade está fechada, não precisamos mexer nela!
+
+Outra definição desse principio é: Classes, módulos, funções, etc, devem estar aberta pra extensão, porem fechada para modificaco.
+
+Lembre-se do exemplo de que uma pessoa colocar um casaco não precisamos abrir a caixa toraxica da pessoa via cirurgia.

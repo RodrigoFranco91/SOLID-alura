@@ -1,0 +1,119 @@
+Neste capítulo aprendemos a lidar com a Herança Indesejada.
+
+
+- Agora será possível um Funcionário ser promovido e a promoção seguirá a seguinte ordem: Assistente -> Analista -> Especialista ->
+Gerente. Lembre-se que nosso projeto já tem um Enum chamado Cargo. Para implementar o serviço de promover um funcionário vamos criar
+uma nova classe e nessa classe vai ter um método e neste podemos encher de IF's para poder avaliar o cargo atual do funcionario e 
+alterá-lo para o próximo, mas essa não é a melhor maneira de fazer isso, a melhor maneira vai criar método no ENUM. Siga o passo a 
+passo para implementar essa funcionalidade da melhor maneira possível:
+
+	1) No ENUM Cargo criar o método abstrato getProximoCargo(). Cada constante do ENUM vai ter que implementar esse método. Veja
+	como ficará o enum:
+	
+		public enum Cargo {
+
+			ASSISTENTE {
+				@Override
+				public Cargo getProximoCargo() {
+					return ANALISTA;
+				}
+			},
+			
+			ANALISTA {
+				@Override
+				public Cargo getProximoCargo() {
+					return ESPECIALISTA;
+				}
+			},
+			
+			ESPECIALISTA {
+				@Override
+				public Cargo getProximoCargo() {
+					return GERENTE;
+				}
+			},
+			
+			GERENTE {
+				@Override
+				public Cargo getProximoCargo() {
+					// TODO Auto-generated method stub
+					return GERENTE;
+				}
+			};
+			
+			public abstract Cargo getProximoCargo();
+
+		}
+	
+	2) Criar a classe PromocaoService no pacote service.promocao e nesta classe criar o método promover(). Tenha em mente que 
+	em cargo de Gerente não há mais promoção. Veja como ficará essa classe:
+
+		public class PromocaoService {
+
+			public void promover(Funcionario funcionario, boolean metaBatida)	{
+				Cargo cargoAtual = funcionario.getCargo();
+				if(Cargo.GERENTE == cargoAtual) {
+					throw new ValidacaoException("Gerente não pode ser promovido");
+				}
+				
+				if(metaBatida) {
+					Cargo novoCargo = cargoAtual.getProximoCargo();
+					funcionario.promover(novoCargo);
+				}else {
+					throw new ValidacaoException("Funcionário não bateu a meta");
+				}
+			}
+			
+		}
+		
+	3) No item anterior chamamos o método promover() do objeto Funcionario, ele ainda não existe. Vamos criar esse método
+	na classe Funcionario:
+	
+		public void promover(Cargo novoCargo) {
+			this.cargo = novoCargo;
+			
+		}
+		
+		
+- Vamos agorar criar um cenário que gerará confusão. Pense agora que nossa aplicação vai aceitar funcionário terceirizado e esse
+tipo de funcionário tem todos os atributos de um funcionário normal, ou seja, podemos então falar que Terceirizado é um
+Funcionario, ou seja, podemos aplicar aqui a Herança. Na classe Terceirizado podemos adicionar os atributos prórpio deles, como
+nome da empresa, só que ao aplicar herança o objeto Terceirizado ganhou o método promover(), mas não será nós os responsáveis por
+promover um funcinário terceirizado! O que fazer? Ha quem sobrescreve o método e faz o mesmo não fazer nada (retornar null), neste
+caso teriamos tambem que adicionar um IF lá na classe PromocaoService(), pois o método lá recebe um Funcionario e Terceirizado
+passou a ser um Funcionario (Polimorfismo), mas isso não é boa prática.
+
+Herança deve ser aplicada somente quando tudo que vou herdar (todos métodos e atributos) será usado!
+
+Quando caímos neste cenário (herança indesejada) devemos usar Composição no lugar de Herança, ou seja, vamos extrair para uma classe
+os atributos e métodos que são comuns para Funcionario e Terceirizado e ambas as classes terão relacionamento com essa classe.
+
+Siga o passo a passo para implementar:
+
+	1) No pacote model criar a classe DadosPessoais. Ela ficará assim:
+	
+		public class DadosPessoais {
+			
+			private String nome;
+			private String cpf;
+			private Cargo cargo;
+			private BigDecimal salario;
+			
+			//Getters e Setters
+			
+		}
+		
+	2) Retirar os atributos iguais da classe Funcionario que são iguais a da classe DadosPessoais;
+	
+	3) Criar no pacote model a classe Terceirizado;
+	
+	4) A classe Funcionario e Terceirizado ganham um atributo do tipo DadosPessoais.
+	
+	
+- Isso que implementamos tem a ver com o Liskov Substitution Principle (Princípio da Substituição de Liskov), ou seja, é a letra L
+do SOLID. Lembre-se da metáfora: Temos o animal Pato e temos um Pato de Borracha, por mais, que o pato de plástico tenha aparencia 
+de pato, faz Quack ele não é um pato! Caso a gente trate a mesma como um pato teremos um problema (efeito colateral)! 
+
+Tenha em mente que para Herdar uma classe ou Implementar uma interface temos que usar todos os atributos/métodos da classe pai ou da
+interface, quando não fazemos isso não estamos seguindo o Princípio de Liskov.
+	
